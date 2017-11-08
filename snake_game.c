@@ -12,7 +12,7 @@ enum direction{
 	RIGHT,
 };
 enum direction dir;
-int draw(int *gameOver, int *score ,int snake[], int fruitArray[]);
+void draw(int *gameOver, int *score ,int snake[], int fruitArray[]);
 int score_board();
 void generate_fruit(int SIZE,int fruit[]);
 void input();
@@ -48,7 +48,7 @@ int main(){
 	return 0;
 }
 
-int draw(int *gameOver, int *score ,int snake[], int fruitArray[]){
+void draw(int *gameOver, int *score ,int snake[], int fruitArray[]){
 
 	// TODO : change the coordinate increment , it is confusing .
 
@@ -80,7 +80,6 @@ int draw(int *gameOver, int *score ,int snake[], int fruitArray[]){
 			}
 			if(snakeX == 0 || snakeY ==0 || snakeX == SIZE || snakeY == SIZE){
 				*gameOver = TRUE;
-				return *gameOver;
 			}
 			if(x==0 || y==0 || y==SIZE || x==SIZE){
 				printf("#");
@@ -128,7 +127,7 @@ void input(){
 				dir = RIGHT;
 				break;	
 			case 's':
-				dir = DOWN;
+				dir = DOWN; 
 				break;
 			case 'x':
 				dir = STOP;
