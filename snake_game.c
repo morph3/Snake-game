@@ -12,13 +12,13 @@ enum direction{
 	RIGHT,
 };
 enum direction dir;
-int game_over();
-void draw(int snake[], int fruitArray[]);
+int draw(int *gameOver, int *score ,int snake[], int fruitArray[]);
 int score_board();
 void generate_fruit(int SIZE,int fruit[]);
 void input();
 void play(int snake[]);
-int score();
+int snake_eat_fruit(int snakeX, int fruitArray[],int snakeY);
+
 // TODO : add a menu function that configures the game .
 // TODO : add a scoreboard .
 
@@ -28,27 +28,27 @@ int main(){
 	//int board[SIZE][SIZE];
 	// snake has two coordinates x and y
 	int snake[2]={5,5}; // and initialized its coordinates
+	int score=0;
+	int gameOver = FALSE;
 	
 	dir = STOP;
 	srand(time(NULL));
 	generate_fruit(SIZE,fruitArray);
-	while(!game_over()){
+	while(!gameOver){
 		fflush(stdin);
-		if(score()){
-			
-			generate_fruit(SIZE , fruitArray);
-		}
-		draw(snake,fruitArray);
+		draw(&gameOver ,&score ,snake,fruitArray);
 		input();
 		play(snake);
-		//screen[fruitArray[0],fruitArray[1]]="X";
 		printf("Fruit coordinate : %d x %d y \n", fruitArray[0], fruitArray[1]);
+		printf("Score : %d ", score);
 		Sleep(90);
 	}
+	printf("Game Over");
+	
 	return 0;
 }
 
-void draw(int snake[], int fruitArray[]){
+int draw(int *gameOver, int *score ,int snake[], int fruitArray[]){
 
 	// TODO : change the coordinate increment , it is confusing .
 
@@ -62,7 +62,6 @@ void draw(int snake[], int fruitArray[]){
 	# # 	 1,0 | 1,1 | 1,2
 	###  	 2,0 | 2,1 | 2,2
 	*/
-
 	int x,y; // coordinates of table
 
 	for(x=0 ; x<=SIZE ; x++){
@@ -75,22 +74,23 @@ void draw(int snake[], int fruitArray[]){
 				printf("X");
 				continue;
 			}
+			if(snake_eat_fruit(snakeX, fruitArray,snakeY)){
+				generate_fruit(SIZE , fruitArray);
+				(*score)++ ;	
+			}
+			if(snakeX == 0 || snakeY ==0 || snakeX == SIZE || snakeY == SIZE){
+				*gameOver = TRUE;
+				return *gameOver;
+			}
 			if(x==0 || y==0 || y==SIZE || x==SIZE){
 				printf("#");
 			}
 			else{
 				printf(" ");
-			}		
+			}	
 		}
 		printf("\n");
 	}
-}
-
-
-int game_over(){
-	// TODO : if snake crushes with wall , gameover.
-	// if snake eats itself , gameover.
-	return FALSE;
 }
 
 
@@ -130,6 +130,8 @@ void input(){
 			case 's':
 				dir = DOWN;
 				break;
+			case 'x':
+				dir = STOP;
 			default:
 				break;
 		}
@@ -155,6 +157,8 @@ void play(int snake[]){
 		case RIGHT:
 			snake[1]++;
 			break;
+		case STOP:
+			break;
 		default:
 			break;
 	}
@@ -163,6 +167,6 @@ void play(int snake[]){
 }
 
 
-int score(){
-	return FALSE;
+int snake_eat_fruit(int snakeX, int fruitArray[],int snakeY){
+	return (snakeX == fruitArray[0] && snakeY == fruitArray[1]);
 }
