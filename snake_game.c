@@ -3,7 +3,7 @@
 #include <conio.h>
 #define FALSE 0
 #define TRUE 1
-const int SIZE=16;
+const int SIZE=20;
 enum direction{
 	STOP=0,
 	UP,
@@ -12,80 +12,95 @@ enum direction{
 	RIGHT,
 };
 enum direction dir;
-void draw(int *gameOver, int *score ,int snake[], int fruitArray[]);
+void draw(int *gameOver, int *score ,int *tailLength,int snake[], int fruitArray[], int tailX[], int tailY[]);
 int score_board();
 void generate_fruit(int SIZE,int fruit[]);
 void input();
 void play(int snake[]);
-int snake_eat_fruit(int snakeX, int fruitArray[],int snakeY);
-
+void tail(int snakeX , int snakeY, int tailLength , int tailX[] , int tailY[]);
+void display(int array[], int length);
 // TODO : add a menu function that configures the game .
 // TODO : add a scoreboard .
 
 int main(){
 	// TODO : change variable and function names .
 	int fruitArray[2];
-	//int board[SIZE][SIZE];
-	// snake has two coordinates x and y
-	int snake[2]={5,5}; // and initialized its coordinates
+	int snake[2]={5,5}; // initializing snake
+	int tailX[100], tailY[100];
+	tailX[0] = snake[0];// tail initilazing 
+	tailY[0] = snake[1];// tail initilazing 
+	
+
+	int tailLength = 1;
 	int score=0;
 	int gameOver = FALSE;
-	
-	dir = STOP;
 	srand(time(NULL));
 	generate_fruit(SIZE,fruitArray);
+	
 	while(!gameOver){
 		fflush(stdin);
-		draw(&gameOver ,&score ,snake,fruitArray);
+		draw(&gameOver ,&score ,&tailLength,snake,fruitArray,tailX , tailY);
 		input();
 		play(snake);
-		printf("Fruit coordinate : %d x %d y \n", fruitArray[0], fruitArray[1]);
 		printf("Score : %d ", score);
-		Sleep(90);
+		Sleep(70);
 	}
 	printf("Game Over");
-	
 	return 0;
 }
 
-void draw(int *gameOver, int *score ,int snake[], int fruitArray[]){
-
-	// TODO : change the coordinate increment , it is confusing .
-
+void draw(int *gameOver, int *score ,int *tailLength,int snake[], int fruitArray[], int tailX[], int tailY[]){
 	system("cls");
 	int snakeX, snakeY;
 	snakeX= snake[0];
 	snakeY= snake[1];	
-	/*
-				i,j 
-	### 	 0,0 | 0,1 | 0,2  
-	# # 	 1,0 | 1,1 | 1,2
-	###  	 2,0 | 2,1 | 2,2
-	*/
+	
+	// refreshing tail everytime
+	tail(snakeX , snakeY ,*tailLength,tailX,tailY);
 	int x,y; // coordinates of table
-
 	for(x=0 ; x<=SIZE ; x++){
 		for(y=0 ; y<=SIZE; y++){
+			
+			//snake head drawing
 			if( x == snakeX && y == snakeY ){
 				printf("S");
 				continue;
 			}
+			// fruit drawing
 			if(x==fruitArray[0] && y==fruitArray[1]){
 				printf("X");
 				continue;
 			}
-			if(snake_eat_fruit(snakeX, fruitArray,snakeY)){
+			// if snake eats the fruit
+			if(snakeX == fruitArray[0] && snakeY == fruitArray[1]){
 				generate_fruit(SIZE , fruitArray);
-				(*score)++ ;	
+				(*score)++ ;
+				(*tailLength)++;
 			}
+			
+			// snake hits the wall
 			if(snakeX == 0 || snakeY ==0 || snakeX == SIZE || snakeY == SIZE){
 				*gameOver = TRUE;
 			}
 			if(x==0 || y==0 || y==SIZE || x==SIZE){
 				printf("#");
 			}
+
 			else{
-				printf(" ");
+				int j = 0;
+				int printed = 0;
+			// tail printing 
+				for(j ; j < *(tailLength); j++ ){
+					if(x == tailX[j] && y == tailY[j]){
+						printf("s");
+						printed = 1;
+					}
+				}
+			//to avoid excess blanks
+			if(!printed){
+				printf(" ");	
+			}
+				
 			}	
 		}
 		printf("\n");
@@ -139,7 +154,6 @@ void input(){
 }
 
 void play(int snake[]){
-
 	/*int snakeX, snakeY;
 	snakeX = snake[0];
 	snakeY = snake[1];*/
@@ -165,7 +179,31 @@ void play(int snake[]){
 	return;
 }
 
+void tail(int snakeX , int snakeY, int tailLength , int tailX[] , int tailY[]){
+	int i,j;
+	int tempArrayX[(tailLength)];
+	int tempArrayY[(tailLength)];
 
-int snake_eat_fruit(int snakeX, int fruitArray[],int snakeY){
-	return (snakeX == fruitArray[0] && snakeY == fruitArray[1]);
+	// refreshing tail 
+	// basically tail has previous snake coordinates everytime 
+	// tailX part
+	for(i =0; i <(tailLength) ; i++){
+		tempArrayX[i] = tailX[i];
+	}
+	tailX[0] = snakeX;
+	for(j = 1; j <tailLength ; j++){
+		tailX[j] = tempArrayX[j-1];
+	}
+
+	////////////////////////////////////////////////////////////////////
+	// tailY part
+	for(i =0; i <(tailLength) ; i++){
+		tempArrayY[i] = tailY[i];
+	}
+	tailY[0] = snakeY;
+	for(j = 1; j <(tailLength) ; j++){
+		tailY[j] = tempArrayY[j-1];
+	}		
+	
+	
 }
