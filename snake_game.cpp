@@ -26,13 +26,14 @@ void play(list<sSnakeStruct> &snake);
 int main(){
     srand(time(NULL));
     list<sSnakeStruct> snake = {{17,5},{16,5},{15,5},{14,5},{13,5},{12,5}};
-    const int nScreenWidth = 100;
-    const int nScreenHeight = 25;
+    int nScreenWidth = 100;
+    int nScreenHeight = 25;
     int nFruitX = 40;
     int nFruitY = 10;
     float fScore = 1.0f;
     float fScoreConstant = 5.0f;
     bool isDead = false;
+
     // snake is heading towards
     dir = EAST;
 
@@ -47,6 +48,7 @@ int main(){
 
     HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
     SetConsoleActiveScreenBuffer(hConsole);
+    HWND console = GetConsoleWindow();
     DWORD dwBytesWritten = 0;
     DWORD dwAttrBytesWritten = 0;
 
@@ -54,12 +56,12 @@ int main(){
     string sTitle = "Snake game ----- Score : ";
 
     unsigned int TIME_SLEEP = 100;
-    COORD c = GetLargestConsoleWindowSize(hConsole);
-    cout<< endl << c.X << endl << c.Y ;
+
+
 
     while(!isDead){
-        
-        sprintf(cScore,"%.2f",fScore);
+
+        sprintf(cScore,"%.1f",fScore);
         SetConsoleTitle((sTitle+cScore).c_str());
 
 
@@ -72,7 +74,7 @@ int main(){
             screenAttr[i] = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED;
         }
 
-        // draw border
+        // draw borders
         for (int i = 0; i < nScreenWidth; i++) {
             screen[i] = '=';
             screen[(nScreenHeight-1) * nScreenWidth +i] = '=';
@@ -108,14 +110,14 @@ int main(){
         play(snake);
 
         //fruit display
-        screen[(nFruitY ) * nScreenWidth  + (nFruitX)] = 'F';
+        screen[(nFruitY ) * nScreenWidth  + (nFruitX)] = 'X';
         screenAttr[(nFruitY ) * nScreenWidth  + (nFruitX)] = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
 
         //fruit snake collision
         if(snake.front().x == nFruitX && snake.front().y == nFruitY){
             // each fruit makes snakes grow 5 box
             for(int i = 0 ; i < 5 ; i++){
-                snake.push_back({nFruitX,nFruitY});
+                snake.push_back({snake.back().x,snake.back().y});
             }
             nFruitX = rand()%nScreenWidth;
             nFruitY = (rand() % (nScreenHeight-3))+2;
@@ -131,14 +133,23 @@ int main(){
         }
 
         // snake wall collision
-        if(snake.front().x < 0 || snake.front().x >= nScreenWidth){
+        if(snake.front().x <= 0 || snake.front().x >= nScreenWidth){
             isDead = true;
         }
-        if(snake.front().y < 0 || snake.front().y >= nScreenHeight){
+        if(snake.front().y <= 0 || snake.front().y >= nScreenHeight){
             isDead = true;
         }
 
         // snake snake collision
+        int k = 0;
+        for(auto item : snake){
+            // to pass snakes head vs condition
+            if(k>0){
+                if(item.x == snake.front().x && item.y == snake.front().y) isDead = true;
+            }
+            k++;
+        }
+
         // cover the length of snake
         snake.pop_back();
 
