@@ -1,6 +1,7 @@
 #include <iostream>
 #include <conio.h>
 #include <list>
+
 #include <windows.h>
 #include <time.h>
 #include <string>
@@ -23,20 +24,17 @@ enum eDirection{
 void input();
 void play(list<sSnakeStruct> &snake);
 int main(){
-
     srand(time(NULL));
-
-    list<sSnakeStruct> snake = {{4,5},{5,5},{6,5},{7,5},{8,5},{9,5}};
-    const int nScreenWidth = 120;
+    list<sSnakeStruct> snake = {{17,5},{16,5},{15,5},{14,5},{13,5},{12,5}};
+    const int nScreenWidth = 100;
     const int nScreenHeight = 25;
-    int nFruitX = 1;
+    int nFruitX = 40;
     int nFruitY = 10;
-
-    int nScore = 0;
-
+    float fScore = 1.0f;
+    float fScoreConstant = 5.0f;
     bool isDead = false;
     // snake is heading towards
-    dir = WEST;
+    dir = EAST;
 
     char *screen = new char[nScreenWidth*nScreenHeight];
     WORD *screenAttr = new WORD[nScreenWidth*nScreenHeight];
@@ -52,21 +50,20 @@ int main(){
     DWORD dwBytesWritten = 0;
     DWORD dwAttrBytesWritten = 0;
 
-
-    string Title = "Snake Game  ---- Score :  ";
-    string Score;
+    char cScore[50]="";
+    string sTitle = "Snake game ----- Score : ";
 
     unsigned int TIME_SLEEP = 100;
-
+    COORD c = GetLargestConsoleWindowSize(hConsole);
+    cout<< endl << c.X << endl << c.Y ;
 
     while(!isDead){
-        Score = to_string(nScore);
-
-        SetConsoleTitle((Title+Score).c_str());
+        
+        sprintf(cScore,"%.2f",fScore);
+        SetConsoleTitle((sTitle+cScore).c_str());
 
 
         //printf(&screen[1 + nScreenWidth],"Score : %d" , nScore );
-
 
         Sleep(TIME_SLEEP);
         //emptying the pixels each time
@@ -99,7 +96,7 @@ int main(){
                     continue;
                 }
                 screenAttr[item.y * nScreenWidth + item.x ] = FOREGROUND_GREEN;
-                screen[item.y * nScreenWidth + item.x] = 'o';
+                screen[item.y * nScreenWidth + item.x] = 's';
             }
 
         }
@@ -122,7 +119,9 @@ int main(){
             }
             nFruitX = rand()%nScreenWidth;
             nFruitY = (rand() % (nScreenHeight-3))+2;
-            nScore ++;
+            fScore = fScore + fScoreConstant;
+            fScoreConstant = fScoreConstant * 1.1f;
+
             if(TIME_SLEEP < 70){
                 TIME_SLEEP = TIME_SLEEP - 1;
             }
@@ -132,7 +131,14 @@ int main(){
         }
 
         // snake wall collision
+        if(snake.front().x < 0 || snake.front().x >= nScreenWidth){
+            isDead = true;
+        }
+        if(snake.front().y < 0 || snake.front().y >= nScreenHeight){
+            isDead = true;
+        }
 
+        // snake snake collision
         // cover the length of snake
         snake.pop_back();
 
