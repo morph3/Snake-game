@@ -26,10 +26,10 @@ void play(list<sSnakeStruct> &snake);
 int main(){
     srand(time(NULL));
     list<sSnakeStruct> snake = {{17,5},{16,5},{15,5},{14,5},{13,5},{12,5}};
-    int nScreenWidth = 50;
+    int nScreenWidth = 40;
     int nScreenHeight = 25;
-    int nFruitX = 40;
-    int nFruitY = 10;
+    int nFruitX = rand()%nScreenWidth;
+    int nFruitY = (rand() % (nScreenHeight-3))+2;
     float fScore = 1.0f;
     float fScoreConstant = 5.0f;
     bool isDead = false;
@@ -48,20 +48,15 @@ int main(){
 
     HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
     SetConsoleActiveScreenBuffer(hConsole);
-	//HANDLE hStd = GetStdHandle(STD_OUTPUT_HANDLE);
 	
 	DWORD dwBytesWritten = 0;
     DWORD dwAttrBytesWritten = 0;
 	
-    // dont forget (-1)
 	SMALL_RECT smallRect = {0,0,(short)(nScreenWidth-1), (short)(nScreenHeight-1)};
-    
-    // setting window size and buffer size again 
-    
+
 	SetConsoleWindowInfo(hConsole ,1 , &smallRect);
 	SetConsoleScreenBufferSize(hConsole ,{(short)nScreenWidth,(short)nScreenHeight});
 
-    
     
     char cScore[50]="";
     string sTitle = "Snake game ----- Score : ";
@@ -75,6 +70,8 @@ int main(){
         sprintf(cScore,"%.1f",fScore);
         SetConsoleTitle((sTitle+cScore).c_str());
 	
+        //printf(&screen[1 + nScreenWidth],"Score : %d" , nScore );
+
         Sleep(TIME_SLEEP);
         //emptying the pixels each time
         for (int i = 0; i < nScreenWidth*nScreenHeight; i++){
@@ -130,7 +127,7 @@ int main(){
             nFruitX = rand()%nScreenWidth;
             nFruitY = (rand() % (nScreenHeight-3))+2;
             fScore = fScore + fScoreConstant;
-            fScoreConstant = fScoreConstant * 1.1f;
+            fScoreConstant = fScoreConstant * 1.2f;
 
             if(TIME_SLEEP < 70){
                 TIME_SLEEP = TIME_SLEEP - 1;
@@ -141,7 +138,7 @@ int main(){
         }
 
         // snake wall collision
-        if(snake.front().x <= 0 || snake.front().x >= nScreenWidth){
+        if(snake.front().x < 0 || snake.front().x >= nScreenWidth){
             isDead = true;
         }
         if(snake.front().y <= 0 || snake.front().y >= nScreenHeight){
