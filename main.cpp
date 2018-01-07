@@ -177,13 +177,6 @@ int main(){
             WriteConsoleOutputAttribute(hConsole, screenAttr, nScreenWidth*nScreenHeight , {0,0}, &dwAttrBytesWritten);
             WriteConsoleOutputCharacter(hConsole, screen, nScreenWidth * nScreenHeight, { 0,0 }, &dwBytesWritten);
         }
-        free(screen);
-        free(screenAttr);
-        free(&dwAttrBytesWritten);
-        free(&dwBytesWritten);
-        free(hConsole);
-        free(&snake);
-        menu(&nScreenWidth,&nScreenHeight);
     }
     system("pause");
     return 0;
@@ -281,8 +274,10 @@ void generateFruit(int *nFruitX, int *nFruitY, list<sSnakeStruct> snake , int nS
 }
 
 int menu(int *nScreenWidth, int *nScreenHeight){
-    //HANDLE hConsoleOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    //flush(hConsoleOut);
+    HANDLE hConsoleOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleActiveScreenBuffer(hConsoleOut);
+
+
     int nChoice = 0;
     while(nChoice!=1){
         system("cls");
@@ -298,8 +293,9 @@ int menu(int *nScreenWidth, int *nScreenHeight){
                        "3- Leader Board\n"
                        "4- Credits\n"
                        "5- Exit");
-        fflush(stdin);
+
         scanf("%d",&nChoice);
+        fflush(stdin);
         switch (nChoice){
             case 1:
                 return 1;
