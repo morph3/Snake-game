@@ -4,7 +4,6 @@
 #include "colors.h"
 #include <windows.h>
 #include <time.h>
-#define FULL_PIXEL_BLOCK 0x2588
 
 
 using namespace::std;
