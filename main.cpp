@@ -23,22 +23,26 @@ enum eDirection{
     WEST,
 }dir;
 
+void Clear(int nScreenWidth, int nScreenHeight, char screen[], WORD screenAttr[]);
+void Draw(int nScreenWidth, int nScreenHeight, char screen[], WORD screenAttr[],list <sSnakeStruct> snake,int nFruitX, int nFruitY, bool isDead);
+void Seed();
+void Input();
+void Play(list<sSnakeStruct> &snake);
+void GenerateFruit(int *nFruitX, int *nFruitY, list<sSnakeStruct> snake , int nScreenWidth, int nScreenHeight);
+void Collision(list <sSnakeStruct> &snake , int *nFruitX , int *nFruitY , int nScreenWidth, int nScreenHeight, float *fScore , float *fScoreConstant , bool *isDead);
 
-void seed();
-void input();
-void play(list<sSnakeStruct> &snake);
-void generateFruit(int *nFruitX, int *nFruitY, list<sSnakeStruct> snake , int nScreenWidth, int nScreenHeight);
-int menu(int *nScreenWidth, int *nScreenHeight);
+int Menu(int *nScreenWidth, int *nScreenHeight);
 int main(){
     int nScreenWidth = 50;
     int nScreenHeight = 20;
 
-    seed();
-    while(menu(&nScreenWidth,&nScreenHeight)==1){
+    Seed();
+    while(Menu(&nScreenWidth,&nScreenHeight)==1){
 
+        // initalizing variables
         list<sSnakeStruct> snake = {{17,5},{16,5},{15,5},{14,5},{13,5},{12,5}};
         int nFruitX, nFruitY;
-        generateFruit(&nFruitX, &nFruitY, snake, nScreenWidth, nScreenHeight);
+        GenerateFruit(&nFruitX, &nFruitY, snake, nScreenWidth, nScreenHeight);
         float fScore = 1.0f;
         float fScoreConstant = 5.0f;
         bool isDead = false;
@@ -52,13 +56,7 @@ int main(){
 
         auto *screen = new char[nScreenWidth*nScreenHeight];
         auto *screenAttr = new WORD[nScreenWidth*nScreenHeight];
-        for(int j = 0 ; j< nScreenWidth*nScreenHeight ; j++){
-            screenAttr[j] = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED;
-        }
-        for (int i = 0; i < nScreenWidth*nScreenHeight; i++) {
-            screen[i] = ' ';
-        }
-
+        
         DWORD dwBytesWritten = 0;
         DWORD dwAttrBytesWritten = 0;
 
@@ -80,112 +78,46 @@ int main(){
         memset(m_bufScreen, 0, sizeof(CHAR_INFO) * nScreenWidth * nScreenHeight);
 
         while(!isDead){
-
+            // updating console title every frame
             sprintf(cScore,"%.1f",fScore);
             SetConsoleTitle((sTitle+cScore).c_str());
 
             // to have a better gameplay
-            (dir == NORTH || dir == SOUTH) ? TIME_SLEEP = 100 :  TIME_SLEEP = 80;
+            (dir == NORTH || dir == SOUTH) ? TIME_SLEEP = 105 :  TIME_SLEEP = 80;
 
             Sleep(TIME_SLEEP);
-            //emptying the pixels each time
-            for (int i = 0; i < nScreenWidth*nScreenHeight; i++){
-                screen[i] = ' ';
-                screenAttr[i] = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED;
-            }
 
-            // draw borders
-            for (int i = 0; i < nScreenWidth; i++) {
-                screen[i] = ' ';
-                screen[(nScreenHeight-1) * nScreenWidth +i] = ' ';
+            //clearing screen
+            Clear(nScreenWidth, nScreenHeight, screen, screenAttr);
 
-                screenAttr[i] = FULL_PIXEL_BLOCK ;
-                screenAttr[(nScreenHeight-1) * nScreenWidth +i] = FULL_PIXEL_BLOCK ;
-
-            }
-
-            //snake body drawing
-            int j = 0;
-            for (auto item : snake) {
-                if(isDead){
-                    screen[item.y * nScreenWidth + item.x] = '+';
-                }
-                else{
-                    // snakes head
-                    if(j == 0 ){
-                        screen[item.y * nScreenWidth + item.x] = ' ';
-                        screenAttr[item.y * nScreenWidth + item.x ] = FULL_PIXEL_BLOCK | BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE ;
-                        j++;
-                        continue;
-                    }
-                    screenAttr[item.y * nScreenWidth + item.x ] =  FULL_PIXEL_BLOCK ;
-                    screen[item.y * nScreenWidth + item.x] = ' ';
-                }
-
-            }
+            // drawing fruit , snake and borders
+            Draw(nScreenWidth, nScreenHeight, screen, screenAttr,snake,nFruitX,nFruitY ,isDead);
 
             // user input
-            input();
+            Input();
 
             //snake movement
-            play(snake);
+            Play(snake);
 
-            //fruit display
-            screen[(nFruitY ) * nScreenWidth  + (nFruitX)] = 'X';
-            screenAttr[(nFruitY ) * nScreenWidth  + (nFruitX)] = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-
-            //fruit snake collision
-            if(snake.front().x == nFruitX && snake.front().y == nFruitY){
-                // each fruit makes snakes grow 5 box
-                for(int i = 0 ; i < 3 ; i++){
-                    snake.push_back({snake.back().x,snake.back().y});
-                }
-
-                generateFruit(&nFruitX, &nFruitY, snake, nScreenWidth, nScreenHeight);
-                fScore = fScore + fScoreConstant;
-                fScoreConstant = fScoreConstant * 1.2f;
-                /*
-                if(TIME_SLEEP < 70){
-                    TIME_SLEEP = TIME_SLEEP - 1;
-                }
-                else{
-                    TIME_SLEEP = TIME_SLEEP - 2;
-                }*/
-            }
-
-            // snake wall collision
-            if(snake.front().x < 0 || snake.front().x >= nScreenWidth){
-                isDead = true;
-            }
-            if(snake.front().y <= 0 || snake.front().y >= nScreenHeight-1){
-                isDead = true;
-            }
-
-            // snake snake collision
-            int k = 0;
-            for(auto item : snake){
-                // to pass snakes head vs condition
-                if(k>0){
-                    if(item.x == snake.front().x && item.y == snake.front().y) isDead = true;
-                }
-                k++;
-            }
+            // collision checking
+            Collision(snake, &nFruitX, &nFruitY, nScreenWidth, nScreenHeight, &fScore , &fScoreConstant , &isDead);
 
             // cover the length of snake
             snake.pop_back();
 
-            WriteConsoleOutputAttribute(hConsole, screenAttr, nScreenWidth*nScreenHeight , {0,0}, &dwAttrBytesWritten);
-            WriteConsoleOutputCharacter(hConsole, screen, nScreenWidth * nScreenHeight, { 0,0 }, &dwBytesWritten);
+            //display
+            WriteConsoleOutputAttribute(hConsole, screenAttr, (DWORD)nScreenWidth*nScreenHeight , {0,0}, &dwAttrBytesWritten);
+            WriteConsoleOutputCharacter(hConsole, screen, (DWORD)nScreenWidth * nScreenHeight, { 0,0 }, &dwBytesWritten);
         }
     }
     system("pause");
     return 0;
 }
-void seed(){
+void Seed(){
     time_t t;
     srand((unsigned) time(&t));
 }
-void input(){
+void Input(){
     fflush(stdin);
     if(_kbhit()){
         switch(_getch()){
@@ -234,7 +166,7 @@ void input(){
     }
 }
 
-void play(list<sSnakeStruct> &snake){
+void Play(list<sSnakeStruct> &snake){
     switch (dir) {
         case NORTH:
             snake.push_front({snake.front().x, snake.front().y-1});
@@ -255,7 +187,7 @@ void play(list<sSnakeStruct> &snake){
     }
 }
 
-void generateFruit(int *nFruitX, int *nFruitY, list<sSnakeStruct> snake , int nScreenWidth, int nScreenHeight){
+void GenerateFruit(int *nFruitX, int *nFruitY, list<sSnakeStruct> snake , int nScreenWidth, int nScreenHeight){
     // to make sure fruit didnt appear under snake
     bool bIsUnder = true;
     while(bIsUnder){
@@ -273,7 +205,7 @@ void generateFruit(int *nFruitX, int *nFruitY, list<sSnakeStruct> snake , int nS
     }
 }
 
-int menu(int *nScreenWidth, int *nScreenHeight){
+int Menu(int *nScreenWidth, int *nScreenHeight){
     HANDLE hConsoleOut = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleActiveScreenBuffer(hConsoleOut);
 
@@ -357,6 +289,104 @@ int menu(int *nScreenWidth, int *nScreenHeight){
                 break;
             case 5:
                 return 0;
+        }
+
+    }
+}
+
+void Collision(list <sSnakeStruct> &snake ,
+              int *nFruitX ,
+              int *nFruitY ,
+              int nScreenWidth,
+              int nScreenHeight,
+              float *fScore ,
+              float *fScoreConstant ,
+              bool *isDead){
+    //fruit snake collision
+    if(snake.front().x == *nFruitX && snake.front().y == *nFruitY){
+        // each fruit makes snakes grow 5 box
+        for(int i = 0 ; i < 3 ; i++){
+            snake.push_back({snake.back().x,snake.back().y});
+        }
+
+        GenerateFruit(nFruitX, nFruitY, snake, nScreenWidth, nScreenHeight);
+
+        *fScore = *fScore + *fScoreConstant;
+        *fScoreConstant = *fScoreConstant * 1.2f;
+        /*
+        if(TIME_SLEEP < 70){
+            TIME_SLEEP = TIME_SLEEP - 1;
+        }
+        else{
+            TIME_SLEEP = TIME_SLEEP - 2;
+        }*/
+    }
+
+    // snake wall collision
+    if(snake.front().x < 0 || snake.front().x >= nScreenWidth){
+        *isDead = true;
+    }
+    if(snake.front().y <= 0 || snake.front().y >= nScreenHeight-1){
+        *isDead = true;
+    }
+
+    // snake snake collision
+    int k = 0;
+    for(auto item : snake){
+        // to pass snakes head vs condition
+        if(k>0){
+            if(item.x == snake.front().x && item.y == snake.front().y) *isDead = true;
+        }
+        k++;
+    }
+}
+
+void Clear(int nScreenWidth, int nScreenHeight, char screen[], WORD screenAttr[]){
+    //emptying the pixels each time
+    for (int i = 0; i < nScreenWidth*nScreenHeight; i++){
+        screen[i] = ' ';
+        screenAttr[i] = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED;
+    }
+}
+
+
+void Draw(int nScreenWidth,
+          int nScreenHeight,
+          char screen[],
+          WORD screenAttr[],
+          list <sSnakeStruct> snake,
+          int nFruitX,
+          int nFruitY,
+          bool isDead){
+    // draw borders
+    for (int i = 0; i < nScreenWidth; i++) {
+        screen[i] = ' ';
+        screen[(nScreenHeight-1) * nScreenWidth +i] = ' ';
+
+        screenAttr[i] = FULL_PIXEL_BLOCK ;
+        screenAttr[(nScreenHeight-1) * nScreenWidth +i] = FULL_PIXEL_BLOCK ;
+
+    }
+    //fruit drawing
+    screen[(nFruitY ) * nScreenWidth  + (nFruitX)] = 'X';
+    screenAttr[(nFruitY ) * nScreenWidth  + (nFruitX)] = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+
+    //snake body drawing
+    int j = 0;
+    for (auto item : snake) {
+        if(isDead){
+            screen[item.y * nScreenWidth + item.x] = '+';
+        }
+        else{
+            // snakes head
+            if(j == 0 ){
+                screen[item.y * nScreenWidth + item.x] = ' ';
+                screenAttr[item.y * nScreenWidth + item.x ] = FULL_PIXEL_BLOCK | BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE ;
+                j++;
+                continue;
+            }
+            screenAttr[item.y * nScreenWidth + item.x ] =  FULL_PIXEL_BLOCK ;
+            screen[item.y * nScreenWidth + item.x] = ' ';
         }
 
     }
