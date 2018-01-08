@@ -56,11 +56,25 @@ int main(){
 
         auto *screen = new char[nScreenWidth*nScreenHeight];
         auto *screenAttr = new WORD[nScreenWidth*nScreenHeight];
-        
+
         DWORD dwBytesWritten = 0;
         DWORD dwAttrBytesWritten = 0;
 
         // console size and buffer size scaling
+       
+        // Thanks to Javidx9, OneLoneCoder
+            //"It seems that the console behaves differently on some systems
+            // and I'm unsure why this is. It could be to do with windows default settings, or
+            // screen resolutions, or system languages. Unfortunately, MSDN does not offer much
+            // by way of useful information, and so the resulting sequence is the reult of experiment
+            // that seems to work in multiple cases.
+            //
+            // The problem seems to be that the SetConsoleXXX functions are somewhat circular and 
+            // fail depending on the state of the current console properties, i.e. you can't set
+            // the buffer size until you set the screen size, but you can't change the screen size
+            // until the buffer size is correct. This coupled with a precise ordering of calls
+            // makes this procedure seem a little mystical :-P. Thanks to wowLinh for helping - Jx9"
+        
         SMALL_RECT m_rectWindow = { 0, 0, 1, 1 };
         COORD coord = { (short)nScreenWidth, (short)nScreenHeight };
 
